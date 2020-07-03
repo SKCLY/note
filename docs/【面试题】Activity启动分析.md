@@ -1,6 +1,6 @@
 # 描述一下Activity启动过程
 
-![image](..\images\Activity启动过程进程调用关系.png)
+![image](../images/Activity启动过程进程调用关系.png)
 
 大概可以分成四个步骤
 
@@ -45,6 +45,10 @@
    这里ApplicationThread是通过handler的不同标志位去执行ActivityThread的不同方法(这里Android7和Android8之后实现不同，Android8之后将7当中一些关于activity生命周期(100-106)合并成一个159EXECUTE_TRANSACTION，主要是为了方便扩展和实现lifecycle的功能)，最后都会调用到ActivityThread#performLaunchActivity函数当中，拿到启动 Activity 组件 Component 的信息,通过 Instrumentation 类的 newActivity 函数()，内部是通过 ClassLoader 的 loadClass 实例化了 Activity, 拿到 Application 进行与 Activity 绑定，最后调用 Instrumentation 函数的 callActivityOnCreate 执行了 Activity#onCreate 生命周期
 
 3. WindowManager如何管理Activity展示页面内容到手机屏幕
+
+   在调用ActivityThread#performLaunchActivity()函数之前会调用ActivityThread#handleLaunchActivity()函数，会调用WindowManagerGlobal.initialize()进行窗口初始化准备。然后在performLaunchActivity()中会调用Activity#attach()函数中创建PhoneWindow，然后通过setWindowManager方法与WMS关联起来。再通过onCreate内部调用setContentView()函数会创建DecorView(本质FrameLayout)，完全页面布局的加载，但这时Activity在后台没有显示出来。
+
+   
 
 
 
