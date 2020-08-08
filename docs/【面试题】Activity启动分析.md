@@ -46,13 +46,16 @@
 
 3. WindowManager如何管理Activity展示页面内容到手机屏幕
 
-   在调用ActivityThread#performLaunchActivity()函数之前会调用ActivityThread#handleLaunchActivity()函数，会调用WindowManagerGlobal.initialize()进行窗口初始化准备。然后在performLaunchActivity()中会调用Activity#attach()函数中创建PhoneWindow，然后通过setWindowManager方法与WMS关联起来。再通过onCreate内部调用setContentView()函数会创建DecorView(本质FrameLayout)，完全页面布局的加载，但这时Activity在后台没有显示出来。
-
-   
+   在调用ActivityThread#performLaunchActivity()函数之前会调用ActivityThread#handleLaunchActivity()函数，会调用WindowManagerGlobal.initialize()进行窗口初始化准备。然后在performLaunchActivity()中会调用Activity#attach()函数中创建PhoneWindow，然后通过setWindowManager方法与WMS关联起来。再通过onCreate内部调用setContentView()函数会创建DecorView(本质FrameLayout)，完全页面布局的加载，但这时Activity在后台没有显示出来。然后会调用ActivityThread#handleResumeActivity()函数这里会调用Activity#onResume生命周期，再通过ViewManager#addView()，最终会通过Binder通信调用WMS#addWIndow，WMS负责界面显示的是Surface。WMS会将它所管理的Surface交由SurfaceFlinger处理，SurfaceSlinger会将Surface绘制在屏幕上，最将Activity显示在屏幕上。
 
 
 
-延展话题，如何hook一个Activity启动实现打开没有注册的Activity
+
+延展话题
+
+如何hook一个Activity启动实现打开没有注册的Activity
+
+或 插件化实现原理
 
 ![image](..\images\应用内启动Activity进程调用关系.png)
 

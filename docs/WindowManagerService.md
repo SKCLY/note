@@ -84,14 +84,11 @@
         //状态栏，只能有一个状态栏，位于屏幕顶端，其他窗口都位于它下方
         public static final int TYPE_STATUS_BAR         = FIRST_SYSTEM_WINDOW;
         //搜索栏，只能有一个搜索栏，位于屏幕上方
-        public static final int TYPE_SEARCH_BAR         = FIRST_SYSTEM_WINDOW+1; 
-        //
+        public static final int TYPE_SEARCH_BAR         = FIRST_SYSTEM_WINDOW+1;
         //电话窗口，它用于电话交互（特别是呼入），置于所有应用程序之上，状态栏之下,属于悬浮窗(并且给一个Activity的话按下HOME键会出现看不到桌面上的图标异常情况)
         public static final int TYPE_PHONE              = FIRST_SYSTEM_WINDOW+2;
-        //
         //系统警告提示窗口，出现在应用程序窗口之上,属于悬浮窗, 但是会被禁止
         public static final int TYPE_SYSTEM_ALERT       = FIRST_SYSTEM_WINDOW+3;
-        //
         //信息窗口，用于显示Toast, 不属于悬浮窗, 但有悬浮窗的功能, 缺点是在Android2.3上无法接收点击事件
         public static final int TYPE_TOAST              = FIRST_SYSTEM_WINDOW+5;
         //
@@ -120,16 +117,18 @@
         public static final int TYPE_SECURE_SYSTEM_OVERLAY = FIRST_SYSTEM_WINDOW+15;
         //最后一个系统窗口
         public static final int LAST_SYSTEM_WINDOW      = 2999;
+```
 
-2.窗口flags显示属性在WindowManager中也有定义：
+* Window的Flag
 
+````java
         //窗口特征标记
         public int flags;
         //当该window对用户可见的时候，允许锁屏
         public static final int FLAG_ALLOW_LOCK_WHILE_SCREEN_ON     = 0x00000001;
         //窗口后面的所有内容都变暗
         public static final int FLAG_DIM_BEHIND        = 0x00000002;
-        //Flag：窗口后面的所有内容都变模糊
+        //窗口后面的所有内容都变模糊
         public static final int FLAG_BLUR_BEHIND        = 0x00000004;
         //窗口不能获得焦点
         public static final int FLAG_NOT_FOCUSABLE      = 0x00000008;
@@ -171,4 +170,27 @@
         public static final int FLAG_TRANSLUCENT_STATUS = 0x04000000;
         //透明导航栏
         public static final int FLAG_TRANSLUCENT_NAVIGATION = 0x08000000;
-```
+````
+
+* 软件盘相关模式
+
+````java
+		//没有设定状态，系统会选择一个合适的状态或依赖于主题的设置
+		public static final int SOFT_INPUT_STATE_UNSPECIFIED = 0;
+		//不会改变软键盘状态
+		public static final int SOFT_INPUT_STATE_UNCHANGED = 1;
+		//当窗口获取焦点时，软键盘总是被隐藏
+		public static final int SOFT_INPUT_STATE_ALWAYS_HIDDEN = 3;
+		//当软键盘弹出时，窗口会调整大小
+		public static final int SOFT_INPUT_ADJUST_RESIZE = 0x10;
+		//当软键盘弹出时，窗口不需要调整大小，要确保输入焦点是可见的
+		public static final int SOFT_INPUT_ADJUST_PAN = 0x20;
+		//当用户进入该窗口时，软键盘默认隐蔽
+		public static final int SOFT_INPUT_STATE_HIDDEN = 2;
+````
+
+SoftInputMode可能通过两种方式配置
+
+通过AndroidManifest.xml中Activity的属性android:windowsoftinputMode进行配置
+
+也可以通过代码动态配置``geWindow().setSoftInputMode(MindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);``
