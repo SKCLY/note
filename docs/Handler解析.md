@@ -68,29 +68,33 @@ handler已经把这部分功能进行了Linux层的封装
 
 软件开发当中的最少知识原则，让开发者不需要完全了解内部原理，就能实现复杂的功能
 
+#### 子线程发送消息给主线程，如何实现线程切换？
+
+子线程中handler.sendMessage最后调用到MessageQueue.enqueueMessage(msg)将消息放入队列中(消息队列是一个容器，只是一个内存块没有线程区别)，主线程的looper在不断从messageQueue中取消息，最后调用handler.dispatchMessage()完成回调函数，这里回调函数是在主线程，完成了线程切换
+
 #### 为什么Looper在handler里初始化不是直接new，而是使用prepare?  MessageQueue为什么在Looper里初始化？
 
 为了保证handler中looper是线程唯一性。同时也可以保证一个Looper对应一个MessageQueue。
 
-#### ThreadLocal分析
+#### ThreadLocal分析(一个线程有几个Looper，如何保证？)
 
 ThreadLocal是JDK提供用于解决线程安全的工具类，作用为每个线程提供一个独立的变量副本，以解决并发访问的冲突问题。
 
 每个Thread内部都维护了一个 ThreadLocalMap ，ThreadLocalMap通过一个table列表来存储数据，每个数据是以key-value键值对的方式存储，其中key是当前线程ThreadLocal，value是当前线程对应的looper。根据哈希取模的方式得到当前数据存储对应表格的下标，然后以key-value的形式放入表格中。
 
-ThreadLocalMap通过一个table列表来存储数据，每个数据是以key-value键值对的方式存储，其中key是当前线程ThreadLocal，value是当前线程对应的looper。根据哈希取模的方式得到当前数据存储对应表格的下标，然后以key-value的形式放入表格中。
-
 #### 如何保证线程数据隔离：线程上下文隔离
 
-Looper通过调用prepare()方法来初始化，prepare()方法里创建Looper并放入ThreadLocal里，并通过静态方法ThreadLocal.get()来获取，保证Looper的线程唯一性。同理MessageQueue是在Looper的构造函数中初始化，也通过静态方法来获取，保证了MessageQueue的线程唯一 性。
+Looper通过调用prepare()方法来初始化，prepare()方法里创建Looper并放入ThreadLocal里，并通过静态方法ThreadLocal.get()来获取，保证Looper的线程唯一性。同理MessageQueue是在Looper的构造函数中初始化，也通过静态方法来获取，保证了MessageQueue的线程唯一性。
 
 #### handler工作流程
 
-handler的工作流程可以看成一个传送带，传送的货物就是Message，通过handler.send类方法(sendMessage,sendMessageDelayed,sendMessageAtTime,sendEmptyMessage)和handler.post类方法(post,postdelayed,postAtTime)将货物一个一个放在传送带上形成一个链表(MessageQueue)，Looper.loop()相当于传送带电源，带着MessageQueue不停滚动，最后按照滚动顺序交给handler.dispatchMessage()处理Message。
+handler的工作流程可以看成一个传送带，传送的货物就是Message，通过handler.send类方法(sendMessage,sendMessageDelayed,sendMessageAtTime,sendEmptyMessage)和handler.post类方法(post,postdelayed,postAtTime)最终都会调用messgeQueue.enqueueMessage将消息一个一个放在传送带上形成一个单链表优先级队列(MessageQueue)，Looper.loop()相当于传送带电源，不断的调用MessageQueue.next()获取消息，最后交给handler.dispatchMessage()处理消息。
 
-####  为什么主线程loop死循环不会引起ANR？(Looper是如何对消息队列排列和分发？)
+####  MessageQueue的阻塞机制(为什么主线程loop死循环不会引起ANR？
 
-looper死循环通过MessageQueue#next方法不断获取message，MessageQueue会根据线程执行时间的先后进行排序，获取时会判断当前message执行时间是否到，如果到了返回message调用handler#dispatchMessage()处理消息。如果没有到设置mBlocked阻塞标志位为true，然后调用nativePollOnce()阻塞直到message执行时间再返回`(当消息队列为空时也会阻塞)`，此时阻塞线程会进入休眠并释放CPU时间片(通过native层实现)，故不会引起ANR。
+####  Looper是如何对消息队列排列和分发？)
+
+looper死循环通过MessageQueue#next方法不断获取message，MessageQueue会根据线程执行时间的先后进行排序，获取时会判断当前message执行时间是否到，如果到了返回message调用handler#dispatchMessage()处理消息。如果没有到(或者当前队列为空)设置mBlocked阻塞标志位为true，然后调用nativePollOnce()阻塞直到message执行时间再返回`(当消息队列为空时也会阻塞)`，此时阻塞线程会进入休眠并释放CPU时间片(通过native层实现)，故不会引起ANR。
 
 线程等待如何唤醒，在looper#enqueueMessage()中当前消息队列为空或有需要执行消息，但mBlocked标志位为true，说明当前线程在等待状态会调用nativeWake()方法进行线程唤醒。
 
@@ -108,7 +112,11 @@ obtain()内部实现逻辑为判断Message池是否为空，不为空取出一�
 
 #### Looper什么时候退出？
 
-当在子线程创建handler，需要调用Looper.quit()方法退出。主线程只要应用在运行就会一直循环运行。
+当在子线程创建handler，需要调用Looper.quit()方法退出。主线程只要应用在运行就会一直循环运行，除非应用退出。
+
+#### 子线程维护的Looper消息无队列处理方案是什么？有什么用？
+
+调用looper.quit()方法退出。
 
 #### Handler泄露的原因及正确的写法
 
@@ -126,7 +134,21 @@ private static class myHandler extends Handler {
 }
 ````
 
+#### 可以有多个handler往MessageQueue中放消息，MessageQueue如何保证线程安全？
 
+使用synchronized锁。内置锁(由JVM自动完全)。
+
+一个线程只有一个Looper可以处理MessageQueue，故使用synchronized(this)来同步锁可以保证线程安全。
+
+所以MessageQueue的next()和enqueueMessage()都需要加锁。
+
+#### 同步屏障
+
+顾名思义，同步屏障就是阻碍同步消息，只让异步消息通过。 UI 更新相关的消息即为异步消息，需要优先处理。
+
+ 
+
+#### IntentService
 
 
 

@@ -194,3 +194,6 @@ SoftInputMode可能通过两种方式配置
 通过AndroidManifest.xml中Activity的属性android:windowsoftinputMode进行配置
 
 也可以通过代码动态配置``geWindow().setSoftInputMode(MindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);``
+
+
+
