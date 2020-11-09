@@ -11,6 +11,8 @@
 7. 主线程在收到Message后通过反射机制创建目标Activity，并回调onCreate等方法
 8. 到此App便正式启动，开始进入Activity的生命周期，执行完onCreate/onStart/onResume方法，UI渲染完成后便可以看到App。
 
+![image](..\images\AMS启动流程.png)
+
 Activity的启动过程，我们可以从Context的startActivity说起，其实现是ContextImpl的startActivity，然后内部会通过Instrumentation来尝试启动Activity，它会调用ams的startActivity方法，这是一个跨进程过程，当ams校验完activity的合法性后，会通过ApplicationThread回调到我们的进程，这也是一次跨进程过程，而applicationThread就是一个binder，回调逻辑是在binder线程池中完成的，所以需要通过Handler H将其切换到ui线程，第一个消息是LAUNCH_ACTIVITY，它对应handleLaunchActivity，在这个方法里完成了Activity的创建和启动。
 
 
@@ -87,11 +89,8 @@ Activity的启动过程，我们可以从Context的startActivity说起，其实�
 hook点的选择：
 
 1. 应用程序通知AMS进程时选择Instrumentation#execStartActivity()函数，应用程序内部启动activity和初始化应用启动根Activity都会调用这个方法，该方法内部都是通过单例方式获取IActivityManager接口调用startActivity方法，单例和接口形式非常适合进行hook，系统创建完单例之后基本不会发生变化，故将hook点选择在这里。
-2. AMS通知ApplicationThread是在ActivityThread通过handler调用handleLaunchActivity()函数展示页面。一个应用ActivityThread一个进程只有一个，handler实例mH是全部变量，这样也非常适合进行hook。
+2. AMS通知ApplicationThread是在ActivityThread通过handler调用handleLaunchActivity()函数展示页面。一个应用ActivityThread进程只有一个，handler实例mH是全局变量，这样也非常适合进行hook。
 
 
 
 #### AndroidManifeset.xml中没有定义的activity，运行时报错，是怎么做的？
-
-
-

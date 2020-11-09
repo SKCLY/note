@@ -122,7 +122,9 @@ obtain()内部实现逻辑为判断Message池是否为空，不为空取出一�
 
 如果在Activity中初始化一个Handler对象，会有如下警告`this handler class should be static or leaks might occur`。
 
-原因是：java中非静态内部类会持有Activity的引用从而导致Activity无法正常GC，但是静态内部类又不能调用Activity内部非静态变量，可以加上弱引用持有外部Activity来实现。
+原因是：java中非静态内部类会持有Activity的引用从而导致Activity无法正常GC。
+
+解决办法：将handler变成静态内部类，但静态内部类是不能调用Activity内部非静态变量，故可以加上弱引用持有外部Activity来实现。
 
 ````java
 private static class myHandler extends Handler {
@@ -133,6 +135,12 @@ private static class myHandler extends Handler {
     }
 }
 ````
+
+为什么其他内部类没有内存泄漏的问题？
+
+MessageQueue持有了Message，Message持有了Handler，Handler持有了Activity，故当Activity销毁时并不能正常GC，导致了内存泄漏。其他内部类并没有被另外对象持有，在Activity销毁时可以正常GC。
+
+
 
 #### 可以有多个handler往MessageQueue中放消息，MessageQueue如何保证线程安全？
 
