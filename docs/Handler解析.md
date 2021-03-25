@@ -138,7 +138,7 @@ private static class myHandler extends Handler {
 
 为什么其他内部类没有内存泄漏的问题？
 
-MessageQueue持有了Message，Message持有了Handler，Handler持有了Activity，故当Activity销毁时并不能正常GC，导致了内存泄漏。其他内部类并没有被另外对象持有，在Activity销毁时可以正常GC。
+Message发出之后存储在MessageQueue中，在Message中存在target是Handler的一个引用，如果Handler是非静态内部类，Handler又会持有Activity的一个引用，故当Activity销毁时并不能正常GC，导致了内存泄漏。其他内部类并没有被另外对象持有，在Activity销毁时可以正常GC。
 
 
 
@@ -201,3 +201,4 @@ public static inerface IdleHandler {
 2. 可以结合handlerThread，用于单线程消息通知器
 
    当我们的页面数据源来自多个线程，就会有可能页面数据会连续快速改变，从而UI也会快速刷新。我们可以优化成只需要对最后一次回调刷新UI。
+
