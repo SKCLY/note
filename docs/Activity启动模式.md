@@ -22,6 +22,8 @@
 
   把启动的``Activity``直接放入当前Task栈顶，会重用栈顶的`Activity`，重用时会调用`onNewIntent()`方法。
 
+  应用场景：点击推送通知进入app
+  
   
 
 在Android是一个应用最多一个Task可以显示在最近任务列表中，如果两个Task的``taskAffinity``相同也只会在任务列表中展示一个。
@@ -34,4 +36,14 @@
   * 不相同会寻找与它`taskAffinity`相同的Task入栈，如果找不到会创建一个新的Task
 
 
+
+实战通常的选择
+
+* 默认(standard)和singleTop：多用于App内部
+* singleInstance：多用于开放给外部App来共享使用
+* singleTask：内部交互和外部交互都会用上
+
+
+
+#### 当手机按下home键，发生了什么
 
