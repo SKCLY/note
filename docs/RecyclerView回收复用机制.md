@@ -70,9 +70,9 @@ onlayout的时候也会进行复用。
 
 
 
-回收的流程
+**回收的流程**
 
-回收代码流程
+代码流程
 
 LinearLayoutManager.onLayoutChildren  -->  detachAndScrapAttachedViews  -->  scrapOrRecycleView  -->  scrapOrRecycleView方法
 

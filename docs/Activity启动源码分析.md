@@ -8,7 +8,7 @@ Activity启动过程分2种，一种是应用程序根Activity启动也就是在
 
 Launcher请求AMS的时序图如下：
 
-![Launcher请求AMS的时序图](C:\DevelopmentTools\GitHub\note\images\Launcher请求AMS的时序图.png)
+![Launcher请求AMS的时序图](..\images\Launcher请求AMS的时序图.png)
 
 
 
