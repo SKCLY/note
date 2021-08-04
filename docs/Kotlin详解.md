@@ -116,9 +116,84 @@ public void toast(Context context, String text, int time) {
 
 * 每个Activity都需要维护一个额外的HashMap来存储所有控件的实例，增加了内存开支
 * HashMap读取速度是没有直接访问控件实例来得快，降低了程序的运行效率
-* 实现对于开发者是黑盒，在一些情况下会出现开发者不可预知的问题，RecyclerView的adapter中使用
+* 实现对于开发者是黑盒，在一些情况下会出现开发者不可预知的问题，例如在RecyclerView的adapter中使用
 
 
+
+**什么是ViewBinding**
+
+ViewBinding总体来说其实非常简单，它的目的只有一个，就是为了避免编写findViewById，与DataBinding相比简单的多。
+
+使用ViewBinding只需要二件事情，第一确保Android Sutdio版本3.6或更高的版本；第二在项目的build.gradle加入如下配置
+
+````gradle
+android {
+	buildFeatuers {
+		viewBinding true
+	}
+}
+````
+
+这样就可以在Activity，Fragment，Adapter，手动引入布局这4个方面使用ViewBinding了。
+
+**在Activity中使用**
+
+一旦启动ViewBinding的功能之后，Android Studio会自动为我们编写的布局文件生成一个Binding类，该类的命名规则是将布局文件名字按驼峰方式重命名后，再加上Binding作为结尾。比如我们定义一个activity_main.xml原布局，那它对应的Binding类就是ActivityMainBinding。
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.textView.text = "Hello"
+    }
+}
+```
+
+使用步骤如下
+
+* 调用布局文件对应的Binding类的inflate()函数去加载布局，inflate()函数接收一个LayoutInfalter参数，在Activity中可以直接获取到。
+* 调用Binding类的getRoot()函数可以得到布局文件根元素的实例，需要在setContentView()函数中传入，这要就能展示布局。
+* 然后通过调用Binding类的getText()函数可以获取id为text的元素实例进行操作。
+
+**在Fragment中使用**
+
+在onCreateView中调用Binding类的inflate()函数去加载布局文件，其他都使用就和Activity一样。
+
+**在Adapter中使用**
+
+在onCreateViewHolder中调用Binding类的inflate()函数加载布局文件，返回ViewHolder并接收Binding类，这样在ViewHolder()直接通过布局Binding类就可以获取对应用控件实例。
+
+```kotlin
+class FruitAdapter(val fruitList: List<Fruit>) : RecyclerView.Adapter<FruitAdapter.ViewHolder>() {
+
+    inner class ViewHolder(binding: FruitItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        val fruitImage: ImageView = binding.fruitImage
+        val fruitName: TextView = binding.fruitName
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = FruitItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val fruit = fruitList[position]
+        holder.fruitImage.setImageResource(fruit.imageId)
+        holder.fruitName.text = fruit.name
+    }
+
+    override fun getItemCount() = fruitList.size
+
+}
+```
+
+**在引入布局中使用**
+
+在布局中通过include引入布局，需要增加id才能通过ViewBinding获取引入的布局。
+
+如果通过include引入的布局最外层是merge标签，那么不需要增加id，会生成一个引入xml文件对应的Binding类，来获取引入布局。
 
 
 
@@ -280,6 +355,31 @@ fun main() {
 
 
 #### 协程
+
+协程就是kotlin中的一个线程开发框架，它最强大的地方在于使得线程切换相比于android的thread和AsyncTask更加方便。
+
+```kotlin
+GlobalScope.launch(Dispatchers.Main) {
+    //在主线程获取图片并设置在view中
+    val image = suspendGetImage("id")
+    avatarIv.setImage(image)
+}
+suspend fun suspendGetImage(imageId: String) {
+    //切换成io线程去请求图片
+    //图片请求成功之后返回主线程
+    withContext(Dispatchers.IO) {
+        getImageId(imageId)
+    }
+}
+```
+
+**协程的挂起是什么**
+
+可以自动切换线程的切线程。
+
+**挂起的非阻塞式是什么**
+
+协程可以用看来阻塞的代码实现非阻塞的功能。
 
 
 
