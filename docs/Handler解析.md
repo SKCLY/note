@@ -8,6 +8,12 @@ Android定义的一定子线程与主线程间通讯的消息传递机制。线�
 
 把子线程中的UI更新信息传递给主线程，从而完成UI更新。
 
+#### 为什么更新UI只能在主线程？
+
+一定要在主线程更新`UI`，实际是为了提高界面的效率和安全性，带来更好的流畅性；反推一下，假如允许多线程更新`UI`，但是访问`UI`是没有加锁的，一旦多线程抢占了资源，那么界面更新将会出现开发者无法预料的情景，对于用户体检来说非常差。
+
+代码实现：在`ViewRootImpl#requestLayout()`里面会有一个`checkThread()`会去检查当前线程是否为主线程，如果不是主线程就会报错。
+
 #### 真的只能在主线程中更新UI吗？
 
 子线程更新UI也行，但是只能更新自己创建的View，也就是说Android的UI更新被设计成了单线程。这样设计的目的，为了防止多线程同时更新一个UI出现的不可控错误。
@@ -88,13 +94,13 @@ Looper通过调用prepare()方法来初始化，prepare()方法里创建Looper�
 
 ![image](../images/handler原理图.png)
 
-handler的工作流程可以看成一个传送带，传送的货物就是Message，通过handler.send类方法`(sendMessage,sendMessageDelayed,sendMessageAtTime,sendEmptyMessage)`和handler.post类方法`(post,postdelayed,postAtTime)`最终都会调用messgeQueue.enqueueMessage将消息一个一个放在传送带上形成一个单链表优先级队列(MessageQueue)，Looper.loop()相当于传送带电源，不断的调用MessageQueue.next()获取消息，最后交给handler.dispatchMessage()处理消息。
+handler的工作流程可以看成一个传送带，传送的货物就是Message，通过`handler.send`类方法`(sendMessage,sendMessageDelayed,sendMessageAtTime,sendEmptyMessage)`和handler.post类方法`(post,postdelayed,postAtTime)`最终都会调用`messgeQueue.enqueueMessage`将消息一个一个放在传送带上形成一个单链表优先级队列(MessageQueue)，Looper.loop()相当于传送带电源，不断的调用`MessageQueue.next()`获取消息，最后交给`handler.dispatchMessage()`处理消息。
 
 ####  MessageQueue的阻塞机制(为什么主线程loop死循环不会引起ANR？
 
 ####  Looper是如何对消息队列排列和分发？)
 
-looper死循环通过MessageQueue#next方法不断获取message，MessageQueue会根据线程执行时间的先后进行排序，获取时会判断当前message执行时间是否到，如果到了返回message调用`handler#dispatchMessage()`处理消息。如果没有到(或者当前队列为空)设置mBlocked阻塞标志位为true，然后调用`nativePollOnce()`阻塞直到message执行时间再返回`(当消息队列为空时也会阻塞)`，此时阻塞线程会进入休眠并释放CPU时间片(通过native层实现)，故不会引起ANR。
+looper死循环通过`MessageQueue#next()`方法不断获取message，MessageQueue会根据线程执行时间的先后进行排序，获取时会判断当前message执行时间是否到，如果到了返回message调用`handler#dispatchMessage()`处理消息。如果没有到(或者当前队列为空)设置mBlocked阻塞标志位为true，然后调用`nativePollOnce()`阻塞直到message执行时间再返回(当消息队列为空时也会阻塞)，此时阻塞线程会进入休眠并释放CPU时间片(通过native层实现)，故不会引起ANR。
 
 线程等待如何唤醒，在`looper#enqueueMessage()`中当前消息队列为空或有需要执行消息，但mBlocked标志位为true，说明当前线程在等待状态会调用`nativeWake()`方法进行线程唤醒。
 
@@ -106,7 +112,7 @@ obtain()内部实现逻辑为判断Message池是否为空，不为空取出一�
 
 #### handler共享内存的实现原理(Message链表原理与重用机制是怎么实现？)
 
-使用享元模式的设计模式，主要实现是在`Message#recycleUnchecked()`方法中，当Message被Looper分发完成后，会调用`recycleUnchecked()`方法，回收没有在使用的message。将message的所有数据清空，标记flags为`FLAG_IN_USE`，并放入sPool的队列中。使用Spool队列数据在`Message#obtain()`方法中，从sPool队首中取出一个空Message，清空标志位flags并使用，从而实现内存共享。定义sPool队列最大为`MAX_POOL_SIZE = 50`
+使用享元模式的设计模式，主要实现是在`Message#recycleUnchecked()`方法中，当Message被Looper分发完成后，会调用`recycleUnchecked()`方法回收没有在使用的message，将message的所有数据清空，标记flags为`FLAG_IN_USE`，并放入sPool的队列中。使用sPool队列数据在`Message#obtain()`方法中，从sPool队首中取出一个空Message，清空标志位flags并使用，从而实现内存共享。定义sPool队列最大为`MAX_POOL_SIZE = 50`
 
 优点：可以减少内存碎片，减少GC，防止申请大块内存时应用OOM。因为GC只有在内存不够时才会执行，GC会导致应用短暂停顿，故代码层次需要尽可能减少内存的开销
 

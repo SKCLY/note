@@ -38,16 +38,8 @@ getprop  dalvik.vm.heapsize  开启largeHeap最大内存限制
   * 常量引用的对象
   * 线程栈引用对象
   * JNI引用对象
-
-
-
-#### LeakCanary检测原理
-
-通过`Application.registerActivityLifecycleCallbacks()`注册Activity的生命周期监听器，然后在Activity的onDestroy里面判断Activity是否被回收了。
-
-在创建WeakReference的时候可以传入一个ReferenceQueue对象，如果WeakReference中引用对象被回收了，那么就会把WeakReference对象添加到ReferenceQueue中，故通过手动调用GC，一段时间后判断ReferenceQueue是否为空来判断对象是否被回收掉。
-
-
+  
+  
 
 #### android垃圾回收机制
 
@@ -72,24 +64,6 @@ getprop  dalvik.vm.heapsize  开启largeHeap最大内存限制
   标记出所有需要回收的对象，然后把存活的对象整理在一起，清理所有标记对象。和标记清除算法的区别就在于对存活对象的移动，可以减少内存碎片，但效率更加低下。
 
   故比较适合在老年代使用。
-
-#### Java中几种引用关系分别是什么，有什么区别？
-
-* 强引用
-
-  一般的Object obj = new Object()属性于强引用。只要强引用关联还在就不会被GC回收
-
-* 软引用
-
-  一些有用但并非必需数据，用软引用关联。系统在内存不够时会对软引用对象回收
-
-* 弱引用
-
-  一些有用程度比软引用更低数据，用弱引用关联。在系统发生GC时，不管内存够不够都会被回收
-
-* 虚引用
-
-  垃圾回收的时候收到一个通知，用来监控垃圾回收器是否正常工作。
 
 
 
@@ -146,7 +120,6 @@ getprop  dalvik.vm.heapsize  开启largeHeap最大内存限制
 9. WebView
 
    使用单独进程，通过AIDL与主线程通信
-   
    
 
 
@@ -207,3 +180,51 @@ android项目中res目录下有不同的drawable目录，同样的图片放在�
 2. 设备分级，需要根据不同的设备进行不同的处理，一般是对于低内存设备处理
 3. 使用图片缓存加载网络图片，减少网络请求
 
+
+
+#### Java中几种引用关系分别是什么，有什么区别？
+
+* 强引用
+
+  一般的Object obj = new Object()属性于强引用。只要强引用关联还在就不会被GC回收
+
+* 软引用
+
+  一些有用但并非必需数据，用软引用关联。系统在内存不够时会对软引用对象回收
+
+* 弱引用
+
+  一些有用程度比软引用更低数据，用弱引用关联。在系统发生GC时，不管内存够不够都会被回收
+
+* 虚引用
+
+  垃圾回收的时候收到一个通知，用来监控垃圾回收器是否正常工作。
+
+
+
+#### LeakCanary检测工具
+
+**原理**
+
+[LeakCanary 内存泄漏原理完全解析](https://www.jianshu.com/p/59106802b62c)
+
+![](..\images\leakcanary泄漏监听流程图.webp)
+
+**如何完成Activity和Fragment的监听？**
+
+构建一个`RefWatcher`对象用来监听回收，Activity通过`Application.registerActivityLifecycleCallbacks()`注册Activity的生命周期监听器，然后在`onActivityDestroyed`回调函数里监听Activity的回收状态。Fragment的`FragmentLifecycleCallbacks`是在`Activity.onActivityCreated()`回调里面进行注册的，在`onFragmentDestroyed`里面监听Framgment的回收状态。
+
+监听对应的Activity和Fragment时都会创建对应一个key，因为同一个Activity和Framgent可以会创建多个实例，如果不同key进行区分的话，dump内存的时候会把有所实例都保存下来，会出来无法对应的情况。
+
+**工作原理**
+
+创建WeakReference对象引用Activity或Fragment，并指定一个ReferenceQueue的引用队列，如果Activity或Fragment被回收了，并将Acitvity或Fragment加入到ReferenceQueue队列中，故通过ReferenceQueue队列的`poll`方法遍历队列，可以取出所有弱引用对象。
+
+**如何判断内存是否泄漏？**
+
+leakcanary会单独开了一个线程`AndroidWatchExecutor `进行判断，主要判断逻辑如下
+
+* 遍历弱引用队列取出对象的key，并将key从`retainedKeys`列表中移除。
+* 判断当前对象的key是否包含在`retainedkeys`列表中，包含说明当前对象已经被回收，否则说明没有回收。
+* 如果当前对象没有进行回收，手动触发一次GC回收，再执行上两步的进行判断对象是否被回收，如果还没有回收，判断当前对象已经引发内存泄漏。
+* 使用Debug类的dump内存中导出hprof文件构造一个HeadDump对象，建立导致内存泄漏的引用链。

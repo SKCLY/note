@@ -51,7 +51,7 @@ SpecMode有UNSPECIFIED ，EXACTLY，AT_MOST三种情况只需要2位，SpecSize�
 
 ![image](..\images\Android屏幕坐标系.png)
 
-![image](C:\DevelopmentTools\GitHub\note\images\Android视图坐标系.png)
+![image](..\images\Android视图坐标系.png)
 
 #### 8. getMeasureWidth和getWidth的区别
 
