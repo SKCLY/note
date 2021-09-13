@@ -53,7 +53,7 @@ input的超时检测机制稍微有点不同，是根据两次input事件的时�
 
 1. 开启一个线程，死循环，循环中睡眠5s
 2. 往UI线程post一个runnable，将_tick 赋值为0，将 _reported 赋值为false
-3. 线程睡眠5s之后检查_tick和_reported字段是否被修改
-4. 如果_tick和_reported没有被修改，说明给主线程post的Runnable一直没有被执行，也就说明主线程卡顿至少5s**（只能说至少，这里存在5s内的误差）**
+3. 线程睡眠5s之后检查`_tick`和`_reported`字段是否被修改
+4. 如果`_tick`和`_reported`没有被修改，说明给主线程post的Runnable一直没有被执行，也就说明主线程卡顿至少5s**（只能说至少，这里存在5s内的误差）**
 5. 将线程堆栈信息输出
 
