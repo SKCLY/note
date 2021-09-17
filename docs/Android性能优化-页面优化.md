@@ -22,6 +22,8 @@ TotalTime：表示新应用启动的耗时，包括新进程的启动和Activity
 
 WaitTIme：包括前一个应用Activity pause的时间和新应用启动的时间
 
+一般用TotalTime来查看应用冷启动耗时，一般比较理想的是1s左右。
+
 
 
 启动优化的路径： application整个启动流程，MainActivity的onCreate()和onWindowFouceChange()两个方法。
@@ -73,6 +75,13 @@ Top Down Tree
 * Self Time：运行自己代码消耗的时间
 * Children Time：调用其他方法的时间
 * Total Time：前面两者时间之和
+
+
+
+应用中页面跳转时启动页面所需要时间，一般在logcat中会有输出，不同机型输出日志不同
+
+* 小米，三星，Vivo：ActivityManager: Displayed，一般格式为`ActivityManager: Displayed [packageName]/.[activityName]: +562ms`
+* 华为：ScreenCommon
 
 
 

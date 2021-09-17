@@ -10,7 +10,7 @@
 
 * `singleTask` 栈内复用模式
 
-  当Activity被其他应用启动时不会进入启动它的Task里，而是会在属于它自己的Task里面创建，并放置在Task的栈顶（如果在Task中已经有Activity，则直接复用并把该Activity上面的所有Activity都清除，保证自己在栈顶并调用`onNewIntent()`），并把整个Task压到启动它应用Task上面。
+  当Activity被其他应用启动时不会进入启动它应用的Task里，而是会在属于它自己的Task里面创建，并放置在Task的栈顶（如果在Task中已经有Activity，则直接复用并把该Activity上面的所有Activity都清除，保证自己在栈顶并调用`onNewIntent()`），并把整个Task压到启动它应用Task上面。
 
   例子：A应用打开邮箱APP的新建邮件页面，会在邮箱APP的Task栈中找是否已经创建了新建邮件页面，如果有把该页面上面所有Activity清除，放在栈顶；如果没有创建一个新的页面放在栈顶面，然后把整个Task叠加到A应用的Task上面。
 

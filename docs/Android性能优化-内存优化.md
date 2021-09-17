@@ -30,7 +30,7 @@ getprop  dalvik.vm.heapsize  开启largeHeap最大内存限制
 
 * 可达性分析
 
-  以`GC Roots`对象作为起点进行搜索，如果`GC Roots`和一个对象之间没有可达路径，则称对你是不可达的。
+  以`GC Roots`对象作为起点进行搜索，如果`GC Roots`和一个对象之间没有可达路径，则称对象是不可达的。
   
   `GC Roots`对象：
   
@@ -198,7 +198,7 @@ android项目中res目录下有不同的drawable目录，同样的图片放在�
 
 * 虚引用
 
-  垃圾回收的时候收到一个通知，用来监控垃圾回收器是否正常工作。
+  垃圾回收的时候收到一个通知，用来监控垃圾回收器是否正常工作，但是虚引用get返回的结果一直为null
 
 
 
@@ -214,17 +214,17 @@ android项目中res目录下有不同的drawable目录，同样的图片放在�
 
 构建一个`RefWatcher`对象用来监听回收，Activity通过`Application.registerActivityLifecycleCallbacks()`注册Activity的生命周期监听器，然后在`onActivityDestroyed`回调函数里监听Activity的回收状态。Fragment的`FragmentLifecycleCallbacks`是在`Activity.onActivityCreated()`回调里面进行注册的，在`onFragmentDestroyed`里面监听Framgment的回收状态。
 
-监听对应的Activity和Fragment时都会创建对应一个key，因为同一个Activity和Framgent可以会创建多个实例，如果不同key进行区分的话，dump内存的时候会把有所实例都保存下来，会出来无法对应的情况。
+监听对应的Activity和Fragment时都会创建对应一个key，因为同一个Activity和Framgent可以会创建多个实例，如果不用key进行区分的话，dump内存的时候会把有所实例都保存下来，会出来无法对应的情况。
 
 **工作原理**
 
-创建WeakReference对象引用Activity或Fragment，并指定一个ReferenceQueue的引用队列，如果Activity或Fragment被回收了，并将Acitvity或Fragment加入到ReferenceQueue队列中，故通过ReferenceQueue队列的`poll`方法遍历队列，可以取出所有弱引用对象。
+创建WeakReference对象引用Activity或Fragment，并指定一个ReferenceQueue的引用队列，如果Activity或Fragment被回收了，会将Acitvity或Fragment加入到ReferenceQueue队列中，故通过ReferenceQueue队列的`poll`方法遍历队列，可以取出所有弱引用对象。
 
 **如何判断内存是否泄漏？**
 
 leakcanary会单独开了一个线程`AndroidWatchExecutor `进行判断，主要判断逻辑如下
 
 * 遍历弱引用队列取出对象的key，并将key从`retainedKeys`列表中移除。
-* 判断当前对象的key是否包含在`retainedkeys`列表中，包含说明当前对象已经被回收，否则说明没有回收。
+* 判断当前对象的key是否包含在`retainedkeys`列表中，包含说明当前对象还没有被回收，不包含说明对象已经被回收。
 * 如果当前对象没有进行回收，手动触发一次GC回收，再执行上两步的进行判断对象是否被回收，如果还没有回收，判断当前对象已经引发内存泄漏。
 * 使用Debug类的dump内存中导出hprof文件构造一个HeadDump对象，建立导致内存泄漏的引用链。

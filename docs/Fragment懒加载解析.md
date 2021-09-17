@@ -38,7 +38,7 @@ public void onActivityCreated(@Nullable Bundle savedInstanceState) {
 }
 ```
 
-* 这样看似解决了预加载的问题但是又会出现另外一个问题，因为已经被ViewPager缓存的Fragment的`onActivityCreated`方法已经执行了，这个时候我们进行fragment切换是不会加载数据了，我们可以在`setUserVisibleHint()`方法中加入请求数据的方法。由于`setUserVisibleHint`是在Fragment的生命周期之前执行的，需要判断当前Framgent的view是否加载完成，否则加载数据返回容易出现view空指针的问题。
+* 这样看似解决了预加载的问题但是又会出现另外一个问题，因为已经被ViewPager缓存的Fragment的`onActivityCreated`方法已经执行了，这个时候我们进行fragment切换是不会加载数据了，我们可以在`setUserVisibleHint()`方法中加入请求数据的方法。由于`setUserVisibleHint`是在Fragment的生命周期之前执行的，需要判断当前Fragment的view是否加载完成，否则加载数据返回容易出现view空指针的问题。
 
 ```java
 @Override
