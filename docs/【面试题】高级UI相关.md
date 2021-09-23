@@ -2,6 +2,8 @@
 
 # 【面试题】高级UI相关
 
+[自定义View和ViewGroup](https://www.cnblogs.com/huolongluo/p/6017917.html)
+
 #### 1. LayoutParams是什么？ 
 
 LayoutParams翻译过来就是布局参数，子View通过LayoutParams告诉父容器（ViewGroup）应该如何放置自己。故LayoutParams与ViewGroup是息息相关的，每个ViewGroup的子类都有自己对应的LayoutParams类，典型的如LinearLayout.LayoutParams和 FrameLayout.LayoutParams等。
@@ -29,7 +31,7 @@ getChildMeasureSpec()函数内部实现算法
 对于不同的父容器和view本身不同的LayoutParams，view就可以有多种MeasureSpec。 
 
 1. 当view采用固定宽高的时候(dp/px)，不管父容器的MeasureSpec是什么，view的MeasureSpec都是精确模式(EXACTLY)并且其大小遵循 Layoutparams中的大小； 
-2. 当view的宽高是match_parent时，这个时候如果父容器的模式是精准模式(EXACTLY)，那么 view也是精准模式并(EXACTLY)且其大小是父容器的剩余空间，如果父容器是最大模式(AT_MOST)，那么view也是最大模式(AT_MOST)并且其大 小不会超过父容器的剩余空间； 
+2. 当view的宽高是match_parent时，这个时候如果父容器的模式是精准模式(EXACTLY)，那么 view也是精准模式并(EXACTLY)且其大小是父容器的剩余空间，如果父容器是最大模式(AT_MOST)，那么view也是最大模式(AT_MOST)并且其大小不会超过父容器的剩余空间； 
 3. 当view的宽高是wrap_content时，不管父容器的模式是精准(EXACTLY)还是最大化(AT_MOST)， view的模式总是最大化(AT_MOST)并且大小不能超过父容器的剩余空间。 
 4. Unspecified模式，这个模式主要用于系统内部多次measure的情况下，一般来说我们不需要关注此模式(这里注意自定义View放到ScrollView的情况需要处理).
 

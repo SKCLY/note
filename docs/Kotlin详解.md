@@ -265,7 +265,7 @@ fun main() {
 
 **run**
 
-run函数基本上和with函数是一样的。区别在于run不需要将对象做为参数，也弥补了with函数传入对象判空的问题，可以和let函数一样在外面做判空处理。返回值函数块最后一行或指定return表达式。
+run函数基本上和with函数是一样的。区别在于run不需要将对象做为参数，也弥补了with函数传入对象判空的问题，可以在外面做判空处理。返回值函数块最后一行或指定return表达式。
 
 ```Kotlin
 //with写法
@@ -356,6 +356,8 @@ fun main() {
 
 #### 协程
 
+[协程到底是怎么切换线程的?](https://juejin.cn/post/6981056016897015838#heading-7)
+
 协程就是kotlin中的一个线程开发框架，它最强大的地方在于使得线程切换相比于android的thread和AsyncTask更加方便。
 
 ```kotlin
@@ -383,5 +385,14 @@ suspend fun suspendGetImage(imageId: String) {
 
 
 
+**kotlin中创建协程的有哪些方法**
 
+[kotlin中创建协程的方法](https://blog.csdn.net/zhong_zihao/article/details/105145206)
+
+* 可在全局创建协程的： lauch 与 runBlocking。lauch 与 runBlocking都能在全局开启一个协程，但 lauch 是非阻塞的 而 runBlocking 是阻塞的
+  * 通过launch开启一个协程，协程体里的任务时就会先挂起（suspend），让launch后面的代码继续执行，直到协程体内的方法执行完成再自动切回来所在的上下文回调结果
+  * 通过runBlocking开启一个协程，程序会等待执行完成runBlocking内的协程体代码，再执行它后面的代码。  runBlocking里的任务如果是非常耗时的操作时，会一直阻塞当前线程，在实际开发中很少会用到runBlocking。
+* 可返回结果的协程：withContext 与 async 
+  * 多个 withContext 任务是串行的， 且withContext 可直接返回耗时任务的结果。 
+  * 多个`async`任务是并行的，`async`返回的是一个`Deferred<T>`，需要调用其`await()`方法获取结果。
 
