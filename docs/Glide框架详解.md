@@ -77,6 +77,9 @@
 
 **Bitmap复用好处：**复用图片会重复使用该图片的内存，并不能减少程序正在使用的内存大小，解决的是减少频繁申请内存带来的性能(抖动、碎片)问题。
 
+详情原理
+https://juejin.cn/post/6963675830639820814
+https://toutiao.io/posts/ptdi4q/preview
 
 
 **android中其他复用**
