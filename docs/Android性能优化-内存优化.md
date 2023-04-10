@@ -178,8 +178,11 @@ android项目中res目录下有不同的drawable目录，同样的图片放在�
 
 1. 根据加载控件的大小调整读取图片的大小，不是全部把图片读取到内存中
 2. 设备分级，需要根据不同的设备进行不同的处理，一般是对于低内存设备处理
+   简单实现 `Application.isLowRamDeivce()`来判断如果是`lowRam`使用RGB_565，否则使用ARGB_8888
 3. 使用图片缓存加载网络图片，减少网络请求
-
+4. Android8之前Bitmap像素内存在`Java heap`中分配，android8之前手机内存比较小一般在1GB左右，故当`heap size`占用超过512M之后就比较容易`OOM`.anrdoid8之后Bitmap像素占用改为在`Native heap`中分配，而`Native heap`内存分配上限就很大，32 位应用的可用内存在3~4G，64位上更大，虚拟内存几乎很难耗尽，故android8之后手机使用Bitmap很难造成`OOM`。所以可以使用hook将android8之前Bitmap内存也放在`Native heap`层进行分配可大大减少`OOM`
+   https://juejin.cn/post/7096059314233671694
+   https://github.com/bytedance/android-inline-hook
 
 
 #### Java中几种引用关系分别是什么，有什么区别？
